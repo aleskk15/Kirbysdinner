@@ -5,8 +5,8 @@ using UUIDs
 route("/run") do
     run!(model, 1)
     agents = []
-    for ghost in allagents(model)
-        push!(agents, ghost)
+    for agent in allagents(model)
+        push!(agents, Mesero)
     end
 
     json(Dict(:msg => "Adios", "agents" => agents))
