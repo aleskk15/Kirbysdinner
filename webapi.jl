@@ -73,7 +73,8 @@ route("/run") do
         comida_data = Dict(
             "cliente_id" => string(comida.cliente_id),
             "posicion" => [comida.posicion[1], comida.posicion[2]],
-            "status" => string(comida.status)
+            "status" => string(comida.status),
+            "nombre" => string(comida.nombre)
         )
         push!(comidas, comida_data)
     end

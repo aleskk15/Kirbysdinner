@@ -101,7 +101,10 @@ function agent_step!(agent::Cliente, model)
     elseif agent.status == pidiendo
         print("pidiendo")
         comidas = abmproperties(model)[:comidas]
-        ordencl = Comida(agent.id, plato, orden, (1,1))
+        pedido = [plato, bebida]
+        pedidoFR= shuffle(pedido)
+        pedidoFINAL = pedidoFR[1]
+        ordencl = Comida(agent.id, pedidoFINAL, orden, (1,1))
         push!(comidas, ordencl)
         agent.status = esperando
          
@@ -241,13 +244,12 @@ end
 function initialize_model()
     space = GridSpace((14,17); periodic=false, metric=:manhattan)
     pathfinder = AStar(space; walkmap=lab, diagonal_movement= false)
-    posiciones = [(3,3),(6,3),(12,7)]
-    pF= shuffle(posiciones)[1:1]
-    final = pF[1]
+    posiciones = [(3,3),(9,13),(12,6)]
+    pF= shuffle(posiciones)
     sillas = [
-        Silla(false, (3, 3), 0),
-        Silla(false, (6, 3), 0),
-        Silla(false, (12, 7), 0)
+        Silla(false, pF[1], 0),
+        Silla(false, pF[2], 0),
+        Silla(false, pF[3], 0)
     ]
     properties = Dict(:pathfinder => pathfinder, :comidas => Comida[], :sillas => sillas)
     model = StandardABM(Union{Cliente,Mesero,Cocinero}, space; agent_step!, properties)
@@ -255,10 +257,10 @@ function initialize_model()
 
     add_agent!((1,1), Cocinero, model)
     add_agent!((5,10), Mesero, model)
+    add_agent!((2,14), Cliente, model)
+    add_agent!((2,15), Cliente, model)
     add_agent!((2,16), Cliente, model)
     
-    print(final)
-
 
     return model, pathfinder
 end
