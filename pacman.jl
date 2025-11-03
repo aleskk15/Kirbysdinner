@@ -179,7 +179,10 @@ function agent_step!(agent::Mesero, model)
                     print(comida.posicion)
                     plan_route!(agent, (comida.posicion), pathfinder)
                     move_along_route!(agent, model, pathfinder)
-                    agent.status = agarraOrden
+                    if agent.pos == comida.posicion 
+                        agent.status = agarraOrden
+                        println("Mesero agarró la orden para el cliente $(agent.cliente_id)")
+                    end
                     break
                 end
             end
