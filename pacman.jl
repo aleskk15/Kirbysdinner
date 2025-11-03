@@ -112,7 +112,8 @@ function agent_step!(agent::Cliente, model)
             for comida in comidas
                 if comida.cliente_id == agent.id && comida.status == entregada
                     agent.status = comiendo
-                    deleteat!(comidas, findfirst(x -> x.cliente_id == agent.id, comidas))
+                    comida.posicion = agent.pos
+                    #deleteat!(comidas, findfirst(x -> x.cliente_id == agent.id, comidas))
                     break
                 end
             end
@@ -123,6 +124,9 @@ function agent_step!(agent::Cliente, model)
         agent.cont += 1
         if agent.cont  >= 15
             agent.status = acabando
+            comidas = abmproperties(model)[:comidas]
+            deleteat!(comidas, findfirst(x -> x.cliente_id == agent.id, comidas))
+
             agent.cont = 0
         end
 
@@ -200,14 +204,18 @@ function agent_step!(agent::Mesero, model)
         comida_idx = findfirst(c -> c.cliente_id == agent.cliente_id, comidas)
         if comida_idx !== nothing
             comida = comidas[comida_idx]
+            #comida.posicion = agent.pos
+
 
             for otheragent in allagents(model)
                 if otheragent isa Cliente && agent.cliente_id == otheragent.id
 
-                    plan_route!(agent, (otheragent.pos), pathfinder)
+                    plan_route!(agent, (otheragent.pos[1], otheragent.pos[2]), pathfinder)
                     move_along_route!(agent, model, pathfinder)
+                    comida.posicion = agent.pos
 
-                    if agent.pos == (otheragent.pos)
+
+                    if agent.pos == (otheragent.pos[1], otheragent.pos[2])
                         agent.status = ordenEntregada
                         comidas[comida_idx].status = entregada
                         println("Mesero entregó la orden al cliente $(agent.cliente_id)")

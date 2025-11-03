@@ -4,6 +4,7 @@ function App() {
   let [cliente, setCliente] = useState([]);
   let [mesero, setMesero] = useState([]);
   let [cocinero, setCocinero] = useState([]);
+  let [comida, setComida] = useState([]);
   let simSpeed = 1;
   const running = useRef(null);
 
@@ -17,6 +18,7 @@ function App() {
       setCliente(data["cliente"] || []);
       setMesero(data["mesero"] || []);
       setCocinero(data["cocinero"] || []);
+      setComida(data["comida"] || []);
     })
     .catch(error => console.error("Error during setup fetch:", error));
   }
@@ -33,6 +35,7 @@ function App() {
         setCliente(data["cliente"] || []);
         setMesero(data["mesero"] || []);
         setCocinero(data["cocinero"] || []);
+        setComida(data["comida"] || []);
       })
       .catch(error => console.error("Error fetching data:", error));
     }, 1000 / simSpeed);
@@ -85,6 +88,10 @@ function App() {
 
       {mesero.map(mesero => (<image key={mesero.id} x={255 + 25 * mesero.pos[0]} y={9 + 25 * mesero.pos[1]} href="identificacion-facial.png" />))}    
       {mesero.map(mesero => console.log("mesero", mesero.status, mesero.pos[0], mesero.pos[1]))}
+
+      {comida.filter(itm => itm.status === "lista" || itm.status === "entregada").map(comida => (<image key={comida.id} x={255 + 25 * comida.posicion[0]} y={9 + 25 * comida.posicion[1]} href="dieta.png" />))}
+      {comida.map(comida => console.log("comida", comida.status, comida.posicion[0], comida.posicion[1]))}
+
       </svg>
     </div>
 

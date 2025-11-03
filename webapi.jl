@@ -6,6 +6,7 @@ route("/setup") do
     clientes = []
     meseros = []
     cocineros = []
+    comidas = []
     for agent in allagents(model)
         if agent isa Cliente
         agent_data = Dict(
@@ -27,7 +28,15 @@ route("/setup") do
             push!(cocineros, agent_data)
         end
     end
-    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros))
+    for comida in abmproperties(model)[:comidas]
+        comida_data = Dict(
+            "cliente_id" => string(comida.cliente_id),
+            "posicion" => [comida.posicion[1], comida.posicion[2]],
+            "status" => string(comida.status)
+        )
+        push!(comidas, comida_data)
+    end
+    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros, "comida" => comidas))
 end
 
 route("/run") do
@@ -35,6 +44,7 @@ route("/run") do
     clientes = []
     meseros = []
     cocineros = []
+    comidas = []
     for agent in allagents(model)
         if agent isa Cliente
         agent_data = Dict(
@@ -59,7 +69,15 @@ route("/run") do
             push!(cocineros, agent_data)
         end
     end
-    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros))
+    for comida in abmproperties(model)[:comidas]
+        comida_data = Dict(
+            "cliente_id" => string(comida.cliente_id),
+            "posicion" => [comida.posicion[1], comida.posicion[2]],
+            "status" => string(comida.status)
+        )
+        push!(comidas, comida_data)
+    end
+    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros, "comida" => comidas))
 end
 
 Genie.config.run_as_server = true
