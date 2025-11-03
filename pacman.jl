@@ -25,6 +25,12 @@ matrix = [
 
 lab = BitArray(matrix)
 
+@show lab[13,10]
+@show lab[10,13]
+@show lab[11,13]
+@show lab[11,11]
+@show lab[5, 10]
+
 @agent struct Cliente(GridAgent{2})
     type::String = "Cliente"
     status::Statuscliente = llegando
@@ -122,9 +128,10 @@ function agent_step!(agent::Cliente, model)
 
     elseif agent.status == acabando
         pathfinder = abmproperties(model)[:pathfinder]
-        plan_route!(agent, (16,10), pathfinder)
+        sillas = abmproperties(model)[:sillas]
+        plan_route!(agent, (10,13), pathfinder)
         move_along_route!(agent, model, pathfinder)
-        if agent.pos == (16,10)
+        if agent.pos == (10,13)
             silla = findfirst(s -> s.cliente_id == agent.id, sillas)
             if silla !== nothing
                 sillas[silla].ocupado = false
@@ -148,8 +155,8 @@ function agent_step!(agent::Cocinero, model)
                 elseif comida.status == preparando && agent.status == cocinaOrden
                     agent.cont += 1
                     if agent.cont >= 15
+                        comida.posicion = (11, 11)
                         comida.status = lista
-                        comida.posicion = (10, 13)
                         agent.status = recibeOrden 
                         agent.cont = 0
                     end
@@ -169,7 +176,8 @@ function agent_step!(agent::Mesero, model)
             for comida in comidas
                 if comida.status == lista 
                     agent.cliente_id = comida.cliente_id
-                    plan_route!(agent, (comida.posicion[1], comida.posicion[2] - 1), pathfinder)
+                    print(comida.posicion)
+                    plan_route!(agent, (comida.posicion), pathfinder)
                     move_along_route!(agent, model, pathfinder)
                     agent.status = agarraOrden
                     break
@@ -193,10 +201,10 @@ function agent_step!(agent::Mesero, model)
             for otheragent in allagents(model)
                 if otheragent isa Cliente && agent.cliente_id == otheragent.id
 
-                    plan_route!(agent, (comida.posicion[1] - 1, comida.posicion[2]), pathfinder)
+                    plan_route!(agent, (otheragent.pos), pathfinder)
                     move_along_route!(agent, model, pathfinder)
 
-                    if agent.pos == (comida.posicion[1] - 1, comida.posicion[2])
+                    if agent.pos == (otheragent.pos)
                         agent.status = ordenEntregada
                         comidas[comida_idx].status = entregada
                         println("Mesero entregó la orden al cliente $(agent.cliente_id)")
@@ -235,7 +243,7 @@ function initialize_model()
 
 
     add_agent!((1,1), Cocinero, model)
-    add_agent!((2,2), Mesero, model)
+    add_agent!((5,10), Mesero, model)
     add_agent!((2,16), Cliente, model)
     
     print(final)

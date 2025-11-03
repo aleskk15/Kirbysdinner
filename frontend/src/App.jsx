@@ -81,10 +81,10 @@ function App() {
 
 
       {cliente.map(cliente => (<image key={cliente.id} x={255 + 25 * cliente.pos[0]} y={9 + 25 * cliente.pos[1]} href="pinguino.png" />))}
-      {cliente.map(cliente => console.log(cliente.status))}
+      {cliente.map(cliente => console.log("cliente", cliente.status, cliente.pos[0], cliente.pos[1]))}
 
       {mesero.map(mesero => (<image key={mesero.id} x={255 + 25 * mesero.pos[0]} y={9 + 25 * mesero.pos[1]} href="identificacion-facial.png" />))}    
-      {mesero.map(mesero => console.log(mesero.status))}
+      {mesero.map(mesero => console.log("mesero", mesero.status, mesero.pos[0], mesero.pos[1]))}
       </svg>
     </div>
 
