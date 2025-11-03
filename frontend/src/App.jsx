@@ -1,68 +1,104 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-const App = () => {
-  const [posX, setPosX] = useState(6);
-  const [posY, setPosY] = useState(8);
+function App() {
+  let [cliente, setCliente] = useState([]);
+  let [mesero, setMesero] = useState([]);
+  let [cocinero, setCocinero] = useState([]);
+  let simSpeed = 1;
+  const running = useRef(null);
 
+    let setup = () => {
+    console.log("Hola");
 
-    useEffect(() => {
-    const interval = setInterval(() => {
+    fetch("http://localhost:8000/setup", {
+    }).then(resp => resp.json())
+    .then(data => {
+      console.log(data);
+      setCliente(data["cliente"] || []);
+      setMesero(data["mesero"] || []);
+      setCocinero(data["cocinero"] || []);
+    })
+    .catch(error => console.error("Error during setup fetch:", error));
+  }
+
+  useEffect(() => {
+        setup();
+    }, []);
+
+  const handleStart = () => {
+    running.current = setInterval(() => {
       fetch("http://localhost:8000/run")
       .then(res => res.json())
-      .then(res => {
-        setPosX(res.agents[0].pos[0]-1);
-        setPosY(res.agents[0].pos[1]-1);
-      });
-    }, 1000);
+      .then(data => {
+        setCliente(data["cliente"] || []);
+        setMesero(data["mesero"] || []);
+        setCocinero(data["cocinero"] || []);
+      })
+      .catch(error => console.error("Error fetching data:", error));
+    }, 1000 / simSpeed);
+  };
 
-      return () => clearInterval(interval);
-  }, [posX, posY]);
+  const handleStop = () => {
+      if (running.current) {
+          clearInterval(running.current);
+          running.current = null;
+      }
+  };
+
 
 
   let matrix = [
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0],  
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0],
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0],  
+   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0],
+   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ]
 
 
 
   return (
+
+    <div>
     <div>
       <svg width="800" height="500" xmlns="http://www.w3.org/2000/svg">
       {
         matrix.map((row, rowidx) =>
-          row.map((value, colidx) =>
-            <rect x={250 + 25 * rowidx} y={5 + 25 * colidx} width={25} height={25} fill={value == 1 ? "lightgray" : "gray"}/>
+        row.map((value, colidx) =>
+          <rect x={250 + 25 * colidx} y={5 + 25 * rowidx} width={25} height={25} fill={value == 1 ? "lightgray" : "gray"} />
       ))
+
       }
-<image x={251 + 25 * 4} y={7 + 25 * 2} href="dieta.png"/>   
-<image x={251 + 25 * 3} y={7 + 25 * 2} href="dieta.png"/>  
-<image x={251 + 25 * 12} y={7 + 25 * 4} href="dieta.png"/>  
 
 
+      {cliente.map(cliente => (<image key={cliente.id} x={255 + 25 * cliente.pos[0]} y={9 + 25 * cliente.pos[1]} href="pinguino.png" />))}
+      {cliente.map(cliente => console.log(cliente.status))}
 
-
-<image x={251 + 25 * 5} y={7 + 25 * 2} href="pinguino.png"/>  
-<image x={251 + 25 *2} y={7 + 25 * 2} href="pinguino.png"/> 
-<image x={251 + 25 * 5} y={7 + 25 * 11} href="pinguino.png"/>  
-
-
-
-
-      <image x={255 + 25 * posX} y={9 + 25 * posY} href="identificacion-facial.png"/>
+      {mesero.map(mesero => (<image key={mesero.id} x={255 + 25 * mesero.pos[0]} y={9 + 25 * mesero.pos[1]} href="identificacion-facial.png" />))}    
+      {mesero.map(mesero => console.log(mesero.status))}
       </svg>
+    </div>
+
+
+    <div>
+    <button onClick={handleStart}>Start</button>
+    </div>
+    <div>
+    <button onClick={handleStop}>Stop</button>
+    </div>
+
+
+
+
     </div>
   );
 };
