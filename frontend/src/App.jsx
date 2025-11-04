@@ -5,6 +5,7 @@ function App() {
   let [mesero, setMesero] = useState([]);
   let [cocinero, setCocinero] = useState([]);
   let [comida, setComida] = useState([]);
+  let [silla, setSilla] = useState([]);
   let simSpeed = 1;
   const running = useRef(null);
 
@@ -19,6 +20,7 @@ function App() {
       setMesero(data["mesero"] || []);
       setCocinero(data["cocinero"] || []);
       setComida(data["comida"] || []);
+      setSilla(data["silla"] || []);
     })
     .catch(error => console.error("Error during setup fetch:", error));
   }
@@ -36,6 +38,7 @@ function App() {
         setMesero(data["mesero"] || []);
         setCocinero(data["cocinero"] || []);
         setComida(data["comida"] || []);
+        setSilla(data["silla"] || []);
       })
       .catch(error => console.error("Error fetching data:", error));
     }, 1000 / simSpeed);

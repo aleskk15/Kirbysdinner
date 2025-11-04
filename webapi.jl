@@ -7,6 +7,7 @@ route("/setup") do
     meseros = []
     cocineros = []
     comidas = []
+    sillas = []
     for agent in allagents(model)
         if agent isa Cliente
         agent_data = Dict(
@@ -30,47 +31,6 @@ route("/setup") do
                 "pos" => [agent.pos[1], agent.pos[2]],
                 "status" => string(agent.status),
                 "isMoving" => agent.isMoving
-            )
-            push!(cocineros, agent_data)
-        end
-    end
-    for comida in abmproperties(model)[:comidas]
-        comida_data = Dict(
-            "cliente_id" => string(comida.cliente_id),
-            "posicion" => [comida.posicion[1], comida.posicion[2]],
-            "status" => string(comida.status)
-        )
-        push!(comidas, comida_data)
-    end
-    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros, "comida" => comidas))
-end
-
-route("/run") do
-    run!(model, 1)
-    clientes = []
-    meseros = []
-    cocineros = []
-    comidas = []
-    for agent in allagents(model)
-        if agent isa Cliente
-        agent_data = Dict(
-                "id" => string(agent.id),  
-                "pos" => [agent.pos[1], agent.pos[2]],
-                "status" => string(agent.status)
-            )
-            push!(clientes, agent_data)
-        elseif agent isa Mesero
-            agent_data = Dict(
-                "id" => string(agent.id),  
-                "pos" => [agent.pos[1], agent.pos[2]],
-                "status" => string(agent.status)
-            )
-            push!(meseros, agent_data)
-        elseif agent isa Cocinero 
-            agent_data = Dict(
-                "id" => string(agent.id),  
-                "pos" => [agent.pos[1], agent.pos[2]],
-                "status" => string(agent.status)
             )
             push!(cocineros, agent_data)
         end
@@ -84,7 +44,70 @@ route("/run") do
         )
         push!(comidas, comida_data)
     end
-    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros, "comida" => comidas))
+    for silla in abmproperties(model)[:sillas]
+        silla_data = Dict(
+            "cliente_id" => string(silla.cliente_id),
+            "posicion" => [silla.posicion[1], silla.posicion[2]],
+            "ocupado" => silla.ocupado
+        )
+        push!(sillas, silla_data)
+    end
+
+    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros, "comida" => comidas, "silla" => sillas))
+end
+
+route("/run") do
+    run!(model, 1)
+    clientes = []
+    meseros = []
+    cocineros = []
+    comidas = []
+    sillas = []
+    for agent in allagents(model)
+        if agent isa Cliente
+        agent_data = Dict(
+                "id" => string(agent.id),  
+                "pos" => [agent.pos[1], agent.pos[2]],
+                "status" => string(agent.status),
+                "isMoving" => agent.isMoving
+            )
+            push!(clientes, agent_data)
+        elseif agent isa Mesero
+            agent_data = Dict(
+                "id" => string(agent.id),  
+                "pos" => [agent.pos[1], agent.pos[2]],
+                "status" => string(agent.status),
+                "isMoving" => agent.isMoving
+            )
+            push!(meseros, agent_data)
+        elseif agent isa Cocinero 
+            agent_data = Dict(
+                "id" => string(agent.id),  
+                "pos" => [agent.pos[1], agent.pos[2]],
+                "status" => string(agent.status),
+                "isMoving" => agent.isMoving
+            )
+            push!(cocineros, agent_data)
+        end
+    end
+    for comida in abmproperties(model)[:comidas]
+        comida_data = Dict(
+            "cliente_id" => string(comida.cliente_id),
+            "posicion" => [comida.posicion[1], comida.posicion[2]],
+            "status" => string(comida.status),
+            "nombre" => string(comida.nombre)
+        )
+        push!(comidas, comida_data)
+    end
+    for silla in abmproperties(model)[:sillas]
+        silla_data = Dict(
+            "cliente_id" => string(silla.cliente_id),
+            "posicion" => [silla.posicion[1], silla.posicion[2]],
+            "ocupado" => silla.ocupado
+        )
+        push!(sillas, silla_data)
+    end
+    json(Dict(:msg => "Adios", "cliente" => clientes, "mesero" => meseros, "cocinero" => cocineros, "comida" => comidas, "silla" => sillas))
 end
 
 Genie.config.run_as_server = true
