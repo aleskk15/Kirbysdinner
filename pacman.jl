@@ -163,6 +163,11 @@ function agent_step!(agent::Cocinero, model)
                     agent.cont += 1
                     if agent.cont >= 15
                         comida.posicion = (11, 11)
+                        for comida2 in comidas
+                            while comida2.posicion == comida.posicion && comida2 != comida
+                                comida.posicion = (comida.posicion[1], comida.posicion[2] + 1)
+                            end
+                        end
                         comida.status = lista
                         agent.status = recibeOrden 
                         agent.cont = 0
