@@ -184,9 +184,9 @@ function agent_step!(agent::Mesero, model)
                 if comida.status == lista 
                     agent.cliente_id = comida.cliente_id
                     print(comida.posicion)
-                    plan_route!(agent, (comida.posicion), pathfinder)
+                    plan_route!(agent, (comida.posicion[1] - 1, comida.posicion[2]), pathfinder)
                     move_along_route!(agent, model, pathfinder)
-                    if agent.pos == comida.posicion 
+                    if agent.pos == (comida.posicion[1] - 1, comida.posicion[2])
                         agent.status = agarraOrden
                         println("Mesero agarró la orden para el cliente $(agent.cliente_id)")
                     end
@@ -213,12 +213,12 @@ function agent_step!(agent::Mesero, model)
             for otheragent in allagents(model)
                 if otheragent isa Cliente && agent.cliente_id == otheragent.id
 
-                    plan_route!(agent, (otheragent.pos[1], otheragent.pos[2]), pathfinder)
+                    plan_route!(agent, (otheragent.pos[1], otheragent.pos[2] + 1), pathfinder)
                     move_along_route!(agent, model, pathfinder)
                     comida.posicion = agent.pos
 
 
-                    if agent.pos == (otheragent.pos[1], otheragent.pos[2])
+                    if agent.pos == (otheragent.pos[1], otheragent.pos[2] + 1)
                         agent.status = ordenEntregada
                         comidas[comida_idx].status = entregada
                         println("Mesero entregó la orden al cliente $(agent.cliente_id)")
