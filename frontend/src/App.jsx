@@ -12,7 +12,7 @@ function App() {
     let setup = () => {
     console.log("Hola");
 
-    fetch("http://localhost:8000/setup", {
+    fetch("http://localhost:8000/run", {
     }).then(resp => resp.json())
     .then(data => {
       console.log(data);
