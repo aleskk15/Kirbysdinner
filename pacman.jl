@@ -35,6 +35,7 @@ lab = BitArray(matrix)
     type::String = "Cliente"
     status::Statuscliente = llegando
     cont::Int = 0
+    isMoving::Bool = false
 end
 
 #El dos me dice las dimensiones del grid
@@ -44,6 +45,7 @@ end
     cocinero_id::Int = 0                
     status::Statusmesero = tomaOrden
     cont::Int = 0
+    isMoving::Bool = false
 end
 
 @agent struct Cocinero(GridAgent{2})
@@ -52,6 +54,7 @@ end
     Mesero_id::Int = 0   
     status::Statuscocinero = recibeOrden
     cont::Int = 0
+    isMoving::Bool = false
 end
 
  mutable struct Comida
@@ -78,8 +81,10 @@ function agent_step!(agent::Cliente, model)
                 # Aqui se mueve a la silla
                 plan_route!(agent, silla.posicion, pathfinder)
                 move_along_route!(agent, model, pathfinder)
+                agent.isMoving = true
                 #Vemos si ya llego 
                 if agent.pos == silla.posicion
+                    agent.isMoving = false
                     silla.ocupado = true
                     silla.cliente_id = agent.id
                     agent.status = sentarse
@@ -138,7 +143,9 @@ function agent_step!(agent::Cliente, model)
         sillas = abmproperties(model)[:sillas]
         plan_route!(agent, (10,13), pathfinder)
         move_along_route!(agent, model, pathfinder)
+        agent.isMoving = true
         if agent.pos == (10,13)
+            agent.isMoving = false
             silla = findfirst(s -> s.cliente_id == agent.id, sillas)
             if silla !== nothing
                 sillas[silla].ocupado = false
@@ -191,7 +198,9 @@ function agent_step!(agent::Mesero, model)
                     print(comida.posicion)
                     plan_route!(agent, (comida.posicion[1] - 1, comida.posicion[2]), pathfinder)
                     move_along_route!(agent, model, pathfinder)
+                    agent.isMoving = true
                     if agent.pos == (comida.posicion[1] - 1, comida.posicion[2])
+                        agent.isMoving = false
                         agent.status = agarraOrden
                         println("Mesero agarró la orden para el cliente $(agent.cliente_id)")
                     end
@@ -220,10 +229,12 @@ function agent_step!(agent::Mesero, model)
 
                     plan_route!(agent, (otheragent.pos[1], otheragent.pos[2] + 1), pathfinder)
                     move_along_route!(agent, model, pathfinder)
+                    agent.isMoving = true
                     comida.posicion = agent.pos
 
 
                     if agent.pos == (otheragent.pos[1], otheragent.pos[2] + 1)
+                        agent.isMoving = false
                         agent.status = ordenEntregada
                         comidas[comida_idx].status = entregada
                         println("Mesero entregó la orden al cliente $(agent.cliente_id)")

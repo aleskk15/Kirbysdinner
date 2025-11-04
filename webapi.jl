@@ -11,19 +11,25 @@ route("/setup") do
         if agent isa Cliente
         agent_data = Dict(
                 "id" => string(agent.id),  
-                "pos" => [agent.pos[1], agent.pos[2]] 
+                "pos" => [agent.pos[1], agent.pos[2]],
+                "status" => string(agent.status),
+                "isMoving" => agent.isMoving
             )
             push!(clientes, agent_data)
         elseif agent isa Mesero
             agent_data = Dict(
                 "id" => string(agent.id),  
-                "pos" => [agent.pos[1], agent.pos[2]] 
+                "pos" => [agent.pos[1], agent.pos[2]],
+                "status" => string(agent.status),
+                "isMoving" => agent.isMoving
             )
             push!(meseros, agent_data)
         elseif agent isa Cocinero 
             agent_data = Dict(
                 "id" => string(agent.id),  
-                "pos" => [agent.pos[1], agent.pos[2]] 
+                "pos" => [agent.pos[1], agent.pos[2]],
+                "status" => string(agent.status),
+                "isMoving" => agent.isMoving
             )
             push!(cocineros, agent_data)
         end
