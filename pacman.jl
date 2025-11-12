@@ -1,0 +1,284 @@
+using Agents, Agents.Pathfinding
+using Random
+@enum Statuscliente llegando sentarse pidiendo esperando comiendo acabando
+@enum Statuscocinero recibeOrden cocinaOrden 
+@enum Statusmesero tomaOrden agarraOrden mandaOrden ordenEntregada
+@enum Tiposdecomida bebida plato
+@enum Statuscomida orden preparando lista entregada
+
+matrix = [
+   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+   0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 0 0 1 1 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 0;  
+   0 1 1 1 1 1 1 1 1 1 1 0 0 1 1 1 0;
+   0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 1 1 0 0 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 1 1 0 0 1 1 1 1 1 1 1 1 1 1 0;
+   0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0;
+   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0;
+   0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+]
+
+lab = BitArray(matrix)
+
+@show lab[13,10]
+@show lab[10,13]
+@show lab[11,13]
+@show lab[11,11]
+@show lab[5, 10]
+
+@agent struct Cliente(GridAgent{2})
+    type::String = "Cliente"
+    status::Statuscliente = llegando
+    cont::Int = 0
+    isMoving::Bool = false
+end
+
+#El dos me dice las dimensiones del grid
+@agent struct Mesero(GridAgent{2})
+    type::String = "Mesero"
+    cliente_id::Int = 0 
+    cocinero_id::Int = 0                
+    status::Statusmesero = tomaOrden
+    cont::Int = 0
+    isMoving::Bool = false
+end
+
+@agent struct Cocinero(GridAgent{2})
+    type::String = "Cocinero"
+    cliente_id::Int = 0 
+    Mesero_id::Int = 0   
+    status::Statuscocinero = recibeOrden
+    cont::Int = 0
+    isMoving::Bool = false
+end
+
+ mutable struct Comida
+    cliente_id::Int 
+    nombre::Tiposdecomida
+    status::Statuscomida
+    posicion::Tuple{Int,Int}
+end
+
+mutable struct Silla
+    ocupado::Bool
+    posicion::Tuple{Int,Int}
+    cliente_id::Int
+end
+
+
+function agent_step!(agent::Cliente, model)
+    if agent.status == llegando
+        sillas = abmproperties(model)[:sillas]
+        pathfinder = abmproperties(model)[:pathfinder]
+
+        for silla in sillas
+            if !silla.ocupado
+                # Aqui se mueve a la silla
+                plan_route!(agent, silla.posicion, pathfinder)
+                move_along_route!(agent, model, pathfinder)
+                agent.isMoving = true
+                #Vemos si ya llego 
+                if agent.pos == silla.posicion
+                    agent.isMoving = false
+                    silla.ocupado = true
+                    silla.cliente_id = agent.id
+                    agent.status = sentarse
+                    print("llegue")
+                end
+                break
+    
+            end
+        end
+
+    elseif agent.status == sentarse
+        agent.cont += 1
+        if agent.cont >= 5
+            agent.status = pidiendo
+            agent.cont = 0
+        end
+
+    elseif agent.status == pidiendo
+        print("pidiendo")
+        comidas = abmproperties(model)[:comidas]
+        pedido = [plato, bebida]
+        pedidoFR= shuffle(pedido)
+        pedidoFINAL = pedidoFR[1]
+        ordencl = Comida(agent.id, pedidoFINAL, orden, (1,1))
+        push!(comidas, ordencl)
+        agent.status = esperando
+         
+    elseif agent.status == esperando
+        print("esperando")
+        if haskey(abmproperties(model), :comidas)
+            comidas = abmproperties(model)[:comidas]
+            for comida in comidas
+                if comida.cliente_id == agent.id && comida.status == entregada
+                    agent.status = comiendo
+                    comida.posicion = agent.pos
+                    #deleteat!(comidas, findfirst(x -> x.cliente_id == agent.id, comidas))
+                    break
+                end
+            end
+        end
+        
+
+    elseif agent.status == comiendo
+        print("comiendo")
+        agent.cont += 1
+        if agent.cont  >= 15
+            agent.status = acabando
+            comidas = abmproperties(model)[:comidas]
+            deleteat!(comidas, findfirst(x -> x.cliente_id == agent.id, comidas))
+
+            agent.cont = 0
+        end
+
+    elseif agent.status == acabando
+        print("acabando")
+        pathfinder = abmproperties(model)[:pathfinder]
+        sillas = abmproperties(model)[:sillas]
+        plan_route!(agent, (10,13), pathfinder)
+        move_along_route!(agent, model, pathfinder)
+        agent.isMoving = true
+        if agent.pos == (10,13)
+            agent.isMoving = false
+            silla = findfirst(s -> s.cliente_id == agent.id, sillas)
+            if silla !== nothing
+                sillas[silla].ocupado = false
+                sillas[silla].cliente_id = 0
+            end
+            kill_agent!(agent, model)
+        end
+    end
+
+end
+
+
+function agent_step!(agent::Cocinero, model)
+    if haskey(abmproperties(model), :comidas)
+            comidas = abmproperties(model)[:comidas]
+            for comida in comidas
+                if comida.status == orden && agent.status == recibeOrden
+                    comida.status = preparando
+                    agent.status = cocinaOrden
+                    break
+                elseif comida.status == preparando && agent.status == cocinaOrden
+                    agent.cont += 1
+                    if agent.cont >= 15
+                        comida.posicion = (11, 11)
+                        for comida2 in comidas
+                            while comida2.posicion == comida.posicion && comida2 != comida
+                                comida.posicion = (comida.posicion[1], comida.posicion[2] + 1)
+                            end
+                        end
+                        comida.status = lista
+                        agent.status = recibeOrden 
+                        agent.cont = 0
+                    end
+            
+                end
+            end
+        end
+end
+
+function agent_step!(agent::Mesero, model)
+    if agent.status == tomaOrden
+        print("tomando orden")
+        if haskey(abmproperties(model), :comidas)
+            comidas = abmproperties(model)[:comidas]
+            pathfinder = abmproperties(model)[:pathfinder]
+
+            for comida in comidas
+                if comida.status == lista 
+                    agent.cliente_id = comida.cliente_id
+                    print(comida.posicion)
+                    plan_route!(agent, (comida.posicion[1] - 1, comida.posicion[2]), pathfinder)
+                    move_along_route!(agent, model, pathfinder)
+                    agent.isMoving = true
+                    if agent.pos == (comida.posicion[1] - 1, comida.posicion[2])
+                        agent.isMoving = false
+                        agent.status = agarraOrden
+                        println("Mesero agarró la orden para el cliente $(agent.cliente_id)")
+                    end
+                    break
+                end
+            end
+        end 
+    elseif agent.status == agarraOrden
+        agent.cont += 1
+        if agent.cont >= 5
+            agent.status = mandaOrden
+            agent.cont = 0
+        end
+    elseif agent.status == mandaOrden
+        pathfinder = abmproperties(model)[:pathfinder]
+        comidas = abmproperties(model)[:comidas]
+
+        comida_idx = findfirst(c -> c.cliente_id == agent.cliente_id, comidas)
+        if comida_idx !== nothing
+            comida = comidas[comida_idx]
+            #comida.posicion = agent.pos
+
+
+            for otheragent in allagents(model)
+                if otheragent isa Cliente && agent.cliente_id == otheragent.id
+
+                    plan_route!(agent, (otheragent.pos[1], otheragent.pos[2] + 1), pathfinder)
+                    move_along_route!(agent, model, pathfinder)
+                    agent.isMoving = true
+                    comida.posicion = agent.pos
+
+
+                    if agent.pos == (otheragent.pos[1], otheragent.pos[2] + 1)
+                        agent.isMoving = false
+                        agent.status = ordenEntregada
+                        comidas[comida_idx].status = entregada
+                        println("Mesero entregó la orden al cliente $(agent.cliente_id)")
+                    end
+                end
+            end
+        end
+
+    elseif agent.status == ordenEntregada
+        agent.cont += 1
+        if agent.cont >= 5
+            agent.status = tomaOrden
+            agent.cont = 0
+        end
+    
+    end
+
+end
+
+ 
+function initialize_model()
+    space = GridSpace((14,17); periodic=false, metric=:manhattan)
+    pathfinder = AStar(space; walkmap=lab, diagonal_movement= false)
+    posiciones = [(3,3),(9,13),(12,6)]
+    pF= shuffle(posiciones)
+    sillas = [
+        Silla(false, pF[1], 0),
+        Silla(false, pF[2], 0),
+        Silla(false, pF[3], 0)
+    ]
+    properties = Dict(:pathfinder => pathfinder, :comidas => Comida[], :sillas => sillas)
+    model = StandardABM(Union{Cliente,Mesero,Cocinero}, space; agent_step!, properties)
+
+
+    add_agent!((1,1), Cocinero, model)
+    add_agent!((5,10), Mesero, model)
+    add_agent!((2,14), Cliente, model)
+    add_agent!((2,15), Cliente, model)
+    add_agent!((2,16), Cliente, model)
+    
+
+    return model, pathfinder
+end
+
+
+model, pathfinder = initialize_model()
